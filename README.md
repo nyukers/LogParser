@@ -1,2 +1,2 @@
 # LogParser
-LogParser SQL-quiries, 2007.
+LogParser SQL-queries, 2007.
