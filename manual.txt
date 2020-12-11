@@ -1,0 +1,220 @@
+Как проводить сбор системных сообщений в гетерогенной сети
+Андрей Бирюков
+
+<Приоритет>Дата -время ИМЯ_УЗЛА  Метка:Сообщение.
+
+
+SELECT * FROM Application
+
+
+LogParser "SELECT * FROM Application"
+
+
+LogParser file:query.sql
+
+
+SELECT 	STRCAT(	EXTRACT_TOKEN( Strings,
+				     1,
+				     '|'),
+		STRCAT(	'\\',
+			EXTRACT_TOKEN( Strings,
+				     0,
+				     '|'
+				     )
+			)
+		) AS User,
+		COUNT(*) AS Total 
+FROM Security 
+WHERE EventType = 16 AND EventCategory = 2 
+GROUP BY User 
+ORDER BY Total DESC
+
+
+SELECT
+	COUNT(EventID) AS TotalLogonFailures,
+	TO_LOWERCASE(EXTRACT_TOKEN(Strings,0,'|')) AS User,
+	TO_LOWERCASE(EXTRACT_TOKEN(Strings,1,'|')) AS Domain,
+	TO_LOWERCASE(EXTRACT_TOKEN(Strings,5,'|')) AS WorkStation,
+	CASE TO_INT(EXTRACT_TOKEN(Strings,2,'|')) 
+		WHEN 2 THEN  'Interactive '
+		WHEN 3 THEN  'Network'
+		WHEN 4 THEN  'Batch'
+		WHEN 5 THEN  'Service'
+		WHEN 6 THEN  'Proxy '
+		WHEN 7 THEN  'Unlock '
+		WHEN 8 THEN  'NetworkCleartext'
+		WHEN 9 THEN  'NewCredentials '
+		WHEN 10 THEN 'RemoteInteractive '
+		WHEN 11 THEN 'CachedInteractive'
+		WHEN 12 THEN 'CachedRemoteInteractive'
+		WHEN 13 THEN 'CachedUnlock'
+		ELSE EXTRACT_TOKEN(Strings,2,'|')
+	END AS Type
+INTO DATAGRID
+FROM \\%machine%\security
+WHERE EventID IN (529)
+GROUP BY User,Domain,WorkStation,Type
+ORDER BY TotalLogonFailures DESC
+
+
+Logparser file:query.sql?machine=Имя_машины
+
+
+SELECT	Text
+FROM ERRORLOG WHERE Text LIKE '%master%'
+GROUP BY Text
+
+
+Option Explicit
+
+Dim objShell, stroka	// Объявляем переменные
+
+stroka="LogParser ""SELECT Text FROM ERRORLOG WHERE (Text LIKE '%" & Date() &" " & Time() &"%') AND (Text LIKE '%master%') GROUP BY Text"""
+// В данном случае удобнее передать запросы  LogParser в командной строке, а не в отдельном файле 
+// ищем строку, содержащую текущую дату и время (без секунд), и название базы master
+
+// Объект командная строка
+Set objShell = CreateObject("WScript.Shell")
+// Выполняем строку с переданным запросом
+ objShell.run (stroka)
+
+WScript.Quit	// Завершаем работу сценария
+
+
+// Адрес URI
+SELECT  EXTRACT_TOKEN(FullUri, 0, '|') AS Uri,
+// Сообщение об ошибке
+        EXTRACT_TOKEN(cs-uri-query, -1, '|') AS ErrorMsg,
+// Номер строки
+        EXTRACT_TOKEN(cs-uri-query, 1, '|') AS LineNo,
+        COUNT(*) AS Total // Количество строк
+USING   STRCAT( cs-uri-stem,
+        REPLACE_IF_NOT_NULL(cs-uri-query, STRCAT('?', cs-uri-query))) AS FullUri
+FROM ex*.log // Файлы, из которых делать выборку
+// Условие выборки
+WHERE (sc-status = 500) AND (cs-uri-stem LIKE '%.asp')
+GROUP BY Uri, ErrorMsg, LineNo
+ORDER BY Total DESC
+
+
+SELECT  cs-username,
+        sc-status,
+        COUNT(*) AS Total
+FROM ex*.log
+// Коды ошибок
+WHERE cs-username IS NOT NULL AND sc-status BETWEEN 401 AND 403
+GROUP BY cs-username,sc-status // Имя пользователя
+ORDER BY Total DESC
+
+
+LogParser file:query.sql -o:SYSLOG
+
+
+SELECT  TimeGenerated, // Время создания
+        CASE SourceName // Смотрим источник сообщения
+          // В зависимости от источника события в формате
+          // EventLog, создаем источник в формате SYSLOG
+          WHEN 'EventLog' THEN 'mark'
+          WHEN 'Service Control Manager' THEN 'daemon'
+          WHEN 'Print' THEN 'lpr'
+          WHEN 'Kerberos' THEN 'auth'
+          WHEN 'NETLOGON' THEN 'logaudit'
+          WHEN 'Application Popup' THEN 'local7'
+          ELSE 'local0'
+        END AS MyFacility,
+        // Здесь в зависимости от типа события
+        // определяем важность SYSLOG
+        CASE EventTypeName
+          WHEN 'Error event' THEN 'err'
+          WHEN 'Warning event' THEN 'warning'
+          WHEN 'Information event' THEN 'info'
+          ELSE 'info'
+        END AS MySeverity,
+        ComputerName, // Имя машины отправителя
+        STRCAT(SourceName, ':'), // Имя в формате SYSLOG
+        Message // Сообщение
+
+// Сообщения отправляются на сервер SYSLOG и в локальный файл
+INTO @MYSERVER04,Log.txt
+FROM System // Журнал System
+
+
+SELECT TO_TIMESTAMP(date, time),
+       CASE sc-status
+         WHEN 500 THEN 'emerg' // Определяем тип события
+         ELSE 'err'
+       END AS MySeverity,
+       s-computername AS MyHostname, // Имя машины       
+       cs-uri-stem,
+       sc-status
+INTO @MYSERVER04
+// Источник передается как параметр в командной строке
+FROM <1>
+WHERE sc-status >= 400 // Номер ошибки 400 и более
+
+
+SELECT
+        CASE SourceName // Смотрим источник сообщения
+          // В зависимости от источника события в формате
+          // EventLog, создаем источник в формате SYSLOG
+          WHEN 'EventLog' THEN 'mark'
+          WHEN 'Service Control Manager' THEN 'daemon' 
+          WHEN 'Print' THEN 'lpr'
+          WHEN 'Kerberos' THEN 'auth'
+          WHEN 'NETLOGON' THEN 'logaudit'
+          WHEN 'Application Popup' THEN 'local7'
+          ELSE 'local0'
+        END AS MyFacility,
+// Здесь в зависимости от типа события определяем
+// важность SYSLOG
+        CASE EventTypeName
+          WHEN 'Error event' THEN 'err'
+          WHEN 'Warning event' THEN 'warning'
+          WHEN 'Information event' THEN 'info'
+          ELSE 'info'
+        END AS MySeverity,
+        ComputerName, // Имя машины отправителя
+        // Имя в формате SYSLOG
+        STRCAT(SourceName, ':'),
+// Сообщение
+
+COUNT(EventID) AS TotalLogonFailures,
+	TO_LOWERCASE(EXTRACT_TOKEN(Strings,0,'|')) AS User,
+	TO_LOWERCASE(EXTRACT_TOKEN(Strings,1,'|')) AS Domain,
+	TO_LOWERCASE(EXTRACT_TOKEN(Strings,5,'|')) AS WorkStation,
+	CASE TO_INT(EXTRACT_TOKEN(Strings,2,'|')) 
+	     WHEN 2 THEN  'Interactive '
+	     WHEN 3 THEN  'Network'
+	     WHEN 4 THEN  'Batch'
+	     WHEN 5 THEN  'Service'
+	     WHEN 6 THEN  'Proxy '
+	     WHEN 7 THEN  'Unlock '
+	     WHEN 8 THEN  'NetworkCleartext'
+	     WHEN 9 THEN  'NewCredentials '
+	     WHEN 10 THEN 'RemoteInteractive '
+	     WHEN 11 THEN 'CachedInteractive'
+	     WHEN 12 THEN 'CachedRemoteInteractive'
+	     WHEN 13 THEN 'CachedUnlock'
+	     ELSE EXTRACT_TOKEN(Strings,2,'|')
+	END AS Type,
+	message
+INTO @MYSERVER04
+FROM \\%machine%\security
+WHERE EventID IN (529)
+GROUP BY User,Domain,WorkStation,Type
+ORDER BY TotalLogonFailures DESC
+
+
+Option Explicit
+
+Dim objShell, stroka // Объявляем переменные
+
+stroka="LogParser ""SELECT Text INTO @MYSERVER04 FROM ERRORLOG WHERE (Text LIKE '%" & Date() &" " & Time() &"%') AND (Text LIKE '%master%') GROUP BY Text""" 
+// В данном случае удобнее передать запросы LogParser в командной строке, а не в отдельном файле. 
+// Ищем строку, содержащую текущую дату и время (без секунд), и название базы master
+// Объект командная строка
+Set objShell = CreateObject("WScript.Shell")
+// Выполняем строку с переданным запросом
+ objShell.run (stroka)
+
+WScript.Quit // Завершаем работу сценария
