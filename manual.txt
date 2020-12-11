@@ -1,7 +1,7 @@
-Как проводить сбор системных сообщений в гетерогенной сети
-Андрей Бирюков
+РљР°Рє РїСЂРѕРІРѕРґРёС‚СЊ СЃР±РѕСЂ СЃРёСЃС‚РµРјРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№ РІ РіРµС‚РµСЂРѕРіРµРЅРЅРѕР№ СЃРµС‚Рё
+РђРЅРґСЂРµР№ Р‘РёСЂСЋРєРѕРІ
 
-<Приоритет>Дата -время ИМЯ_УЗЛА  Метка:Сообщение.
+<РџСЂРёРѕСЂРёС‚РµС‚>Р”Р°С‚Р° -РІСЂРµРјСЏ РРњРЇ_РЈР—Р›Рђ  РњРµС‚РєР°:РЎРѕРѕР±С‰РµРЅРёРµ.
 
 
 SELECT * FROM Application
@@ -57,7 +57,7 @@ GROUP BY User,Domain,WorkStation,Type
 ORDER BY TotalLogonFailures DESC
 
 
-Logparser file:query.sql?machine=Имя_машины
+Logparser file:query.sql?machine=РРјСЏ_РјР°С€РёРЅС‹
 
 
 SELECT	Text
@@ -67,31 +67,31 @@ GROUP BY Text
 
 Option Explicit
 
-Dim objShell, stroka	// Объявляем переменные
+Dim objShell, stroka	// РћР±СЉСЏРІР»СЏРµРј РїРµСЂРµРјРµРЅРЅС‹Рµ
 
 stroka="LogParser ""SELECT Text FROM ERRORLOG WHERE (Text LIKE '%" & Date() &" " & Time() &"%') AND (Text LIKE '%master%') GROUP BY Text"""
-// В данном случае удобнее передать запросы  LogParser в командной строке, а не в отдельном файле 
-// ищем строку, содержащую текущую дату и время (без секунд), и название базы master
+// Р’ РґР°РЅРЅРѕРј СЃР»СѓС‡Р°Рµ СѓРґРѕР±РЅРµРµ РїРµСЂРµРґР°С‚СЊ Р·Р°РїСЂРѕСЃС‹  LogParser РІ РєРѕРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРµ, Р° РЅРµ РІ РѕС‚РґРµР»СЊРЅРѕРј С„Р°Р№Р»Рµ 
+// РёС‰РµРј СЃС‚СЂРѕРєСѓ, СЃРѕРґРµСЂР¶Р°С‰СѓСЋ С‚РµРєСѓС‰СѓСЋ РґР°С‚Сѓ Рё РІСЂРµРјСЏ (Р±РµР· СЃРµРєСѓРЅРґ), Рё РЅР°Р·РІР°РЅРёРµ Р±Р°Р·С‹ master
 
-// Объект командная строка
+// РћР±СЉРµРєС‚ РєРѕРјР°РЅРґРЅР°СЏ СЃС‚СЂРѕРєР°
 Set objShell = CreateObject("WScript.Shell")
-// Выполняем строку с переданным запросом
+// Р’С‹РїРѕР»РЅСЏРµРј СЃС‚СЂРѕРєСѓ СЃ РїРµСЂРµРґР°РЅРЅС‹Рј Р·Р°РїСЂРѕСЃРѕРј
  objShell.run (stroka)
 
-WScript.Quit	// Завершаем работу сценария
+WScript.Quit	// Р—Р°РІРµСЂС€Р°РµРј СЂР°Р±РѕС‚Сѓ СЃС†РµРЅР°СЂРёСЏ
 
 
-// Адрес URI
+// РђРґСЂРµСЃ URI
 SELECT  EXTRACT_TOKEN(FullUri, 0, '|') AS Uri,
-// Сообщение об ошибке
+// РЎРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ
         EXTRACT_TOKEN(cs-uri-query, -1, '|') AS ErrorMsg,
-// Номер строки
+// РќРѕРјРµСЂ СЃС‚СЂРѕРєРё
         EXTRACT_TOKEN(cs-uri-query, 1, '|') AS LineNo,
-        COUNT(*) AS Total // Количество строк
+        COUNT(*) AS Total // РљРѕР»РёС‡РµСЃС‚РІРѕ СЃС‚СЂРѕРє
 USING   STRCAT( cs-uri-stem,
         REPLACE_IF_NOT_NULL(cs-uri-query, STRCAT('?', cs-uri-query))) AS FullUri
-FROM ex*.log // Файлы, из которых делать выборку
-// Условие выборки
+FROM ex*.log // Р¤Р°Р№Р»С‹, РёР· РєРѕС‚РѕСЂС‹С… РґРµР»Р°С‚СЊ РІС‹Р±РѕСЂРєСѓ
+// РЈСЃР»РѕРІРёРµ РІС‹Р±РѕСЂРєРё
 WHERE (sc-status = 500) AND (cs-uri-stem LIKE '%.asp')
 GROUP BY Uri, ErrorMsg, LineNo
 ORDER BY Total DESC
@@ -101,19 +101,19 @@ SELECT  cs-username,
         sc-status,
         COUNT(*) AS Total
 FROM ex*.log
-// Коды ошибок
+// РљРѕРґС‹ РѕС€РёР±РѕРє
 WHERE cs-username IS NOT NULL AND sc-status BETWEEN 401 AND 403
-GROUP BY cs-username,sc-status // Имя пользователя
+GROUP BY cs-username,sc-status // РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 ORDER BY Total DESC
 
 
 LogParser file:query.sql -o:SYSLOG
 
 
-SELECT  TimeGenerated, // Время создания
-        CASE SourceName // Смотрим источник сообщения
-          // В зависимости от источника события в формате
-          // EventLog, создаем источник в формате SYSLOG
+SELECT  TimeGenerated, // Р’СЂРµРјСЏ СЃРѕР·РґР°РЅРёСЏ
+        CASE SourceName // РЎРјРѕС‚СЂРёРј РёСЃС‚РѕС‡РЅРёРє СЃРѕРѕР±С‰РµРЅРёСЏ
+          // Р’ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РёСЃС‚РѕС‡РЅРёРєР° СЃРѕР±С‹С‚РёСЏ РІ С„РѕСЂРјР°С‚Рµ
+          // EventLog, СЃРѕР·РґР°РµРј РёСЃС‚РѕС‡РЅРёРє РІ С„РѕСЂРјР°С‚Рµ SYSLOG
           WHEN 'EventLog' THEN 'mark'
           WHEN 'Service Control Manager' THEN 'daemon'
           WHEN 'Print' THEN 'lpr'
@@ -122,41 +122,41 @@ SELECT  TimeGenerated, // Время создания
           WHEN 'Application Popup' THEN 'local7'
           ELSE 'local0'
         END AS MyFacility,
-        // Здесь в зависимости от типа события
-        // определяем важность SYSLOG
+        // Р—РґРµСЃСЊ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РёРїР° СЃРѕР±С‹С‚РёСЏ
+        // РѕРїСЂРµРґРµР»СЏРµРј РІР°Р¶РЅРѕСЃС‚СЊ SYSLOG
         CASE EventTypeName
           WHEN 'Error event' THEN 'err'
           WHEN 'Warning event' THEN 'warning'
           WHEN 'Information event' THEN 'info'
           ELSE 'info'
         END AS MySeverity,
-        ComputerName, // Имя машины отправителя
-        STRCAT(SourceName, ':'), // Имя в формате SYSLOG
-        Message // Сообщение
+        ComputerName, // РРјСЏ РјР°С€РёРЅС‹ РѕС‚РїСЂР°РІРёС‚РµР»СЏ
+        STRCAT(SourceName, ':'), // РРјСЏ РІ С„РѕСЂРјР°С‚Рµ SYSLOG
+        Message // РЎРѕРѕР±С‰РµРЅРёРµ
 
-// Сообщения отправляются на сервер SYSLOG и в локальный файл
+// РЎРѕРѕР±С‰РµРЅРёСЏ РѕС‚РїСЂР°РІР»СЏСЋС‚СЃСЏ РЅР° СЃРµСЂРІРµСЂ SYSLOG Рё РІ Р»РѕРєР°Р»СЊРЅС‹Р№ С„Р°Р№Р»
 INTO @MYSERVER04,Log.txt
-FROM System // Журнал System
+FROM System // Р–СѓСЂРЅР°Р» System
 
 
 SELECT TO_TIMESTAMP(date, time),
        CASE sc-status
-         WHEN 500 THEN 'emerg' // Определяем тип события
+         WHEN 500 THEN 'emerg' // РћРїСЂРµРґРµР»СЏРµРј С‚РёРї СЃРѕР±С‹С‚РёСЏ
          ELSE 'err'
        END AS MySeverity,
-       s-computername AS MyHostname, // Имя машины       
+       s-computername AS MyHostname, // РРјСЏ РјР°С€РёРЅС‹       
        cs-uri-stem,
        sc-status
 INTO @MYSERVER04
-// Источник передается как параметр в командной строке
+// РСЃС‚РѕС‡РЅРёРє РїРµСЂРµРґР°РµС‚СЃСЏ РєР°Рє РїР°СЂР°РјРµС‚СЂ РІ РєРѕРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРµ
 FROM <1>
-WHERE sc-status >= 400 // Номер ошибки 400 и более
+WHERE sc-status >= 400 // РќРѕРјРµСЂ РѕС€РёР±РєРё 400 Рё Р±РѕР»РµРµ
 
 
 SELECT
-        CASE SourceName // Смотрим источник сообщения
-          // В зависимости от источника события в формате
-          // EventLog, создаем источник в формате SYSLOG
+        CASE SourceName // РЎРјРѕС‚СЂРёРј РёСЃС‚РѕС‡РЅРёРє СЃРѕРѕР±С‰РµРЅРёСЏ
+          // Р’ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РёСЃС‚РѕС‡РЅРёРєР° СЃРѕР±С‹С‚РёСЏ РІ С„РѕСЂРјР°С‚Рµ
+          // EventLog, СЃРѕР·РґР°РµРј РёСЃС‚РѕС‡РЅРёРє РІ С„РѕСЂРјР°С‚Рµ SYSLOG
           WHEN 'EventLog' THEN 'mark'
           WHEN 'Service Control Manager' THEN 'daemon' 
           WHEN 'Print' THEN 'lpr'
@@ -165,18 +165,18 @@ SELECT
           WHEN 'Application Popup' THEN 'local7'
           ELSE 'local0'
         END AS MyFacility,
-// Здесь в зависимости от типа события определяем
-// важность SYSLOG
+// Р—РґРµСЃСЊ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РёРїР° СЃРѕР±С‹С‚РёСЏ РѕРїСЂРµРґРµР»СЏРµРј
+// РІР°Р¶РЅРѕСЃС‚СЊ SYSLOG
         CASE EventTypeName
           WHEN 'Error event' THEN 'err'
           WHEN 'Warning event' THEN 'warning'
           WHEN 'Information event' THEN 'info'
           ELSE 'info'
         END AS MySeverity,
-        ComputerName, // Имя машины отправителя
-        // Имя в формате SYSLOG
+        ComputerName, // РРјСЏ РјР°С€РёРЅС‹ РѕС‚РїСЂР°РІРёС‚РµР»СЏ
+        // РРјСЏ РІ С„РѕСЂРјР°С‚Рµ SYSLOG
         STRCAT(SourceName, ':'),
-// Сообщение
+// РЎРѕРѕР±С‰РµРЅРёРµ
 
 COUNT(EventID) AS TotalLogonFailures,
 	TO_LOWERCASE(EXTRACT_TOKEN(Strings,0,'|')) AS User,
@@ -207,14 +207,14 @@ ORDER BY TotalLogonFailures DESC
 
 Option Explicit
 
-Dim objShell, stroka // Объявляем переменные
+Dim objShell, stroka // РћР±СЉСЏРІР»СЏРµРј РїРµСЂРµРјРµРЅРЅС‹Рµ
 
 stroka="LogParser ""SELECT Text INTO @MYSERVER04 FROM ERRORLOG WHERE (Text LIKE '%" & Date() &" " & Time() &"%') AND (Text LIKE '%master%') GROUP BY Text""" 
-// В данном случае удобнее передать запросы LogParser в командной строке, а не в отдельном файле. 
-// Ищем строку, содержащую текущую дату и время (без секунд), и название базы master
-// Объект командная строка
+// Р’ РґР°РЅРЅРѕРј СЃР»СѓС‡Р°Рµ СѓРґРѕР±РЅРµРµ РїРµСЂРµРґР°С‚СЊ Р·Р°РїСЂРѕСЃС‹ LogParser РІ РєРѕРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРµ, Р° РЅРµ РІ РѕС‚РґРµР»СЊРЅРѕРј С„Р°Р№Р»Рµ. 
+// РС‰РµРј СЃС‚СЂРѕРєСѓ, СЃРѕРґРµСЂР¶Р°С‰СѓСЋ С‚РµРєСѓС‰СѓСЋ РґР°С‚Сѓ Рё РІСЂРµРјСЏ (Р±РµР· СЃРµРєСѓРЅРґ), Рё РЅР°Р·РІР°РЅРёРµ Р±Р°Р·С‹ master
+// РћР±СЉРµРєС‚ РєРѕРјР°РЅРґРЅР°СЏ СЃС‚СЂРѕРєР°
 Set objShell = CreateObject("WScript.Shell")
-// Выполняем строку с переданным запросом
+// Р’С‹РїРѕР»РЅСЏРµРј СЃС‚СЂРѕРєСѓ СЃ РїРµСЂРµРґР°РЅРЅС‹Рј Р·Р°РїСЂРѕСЃРѕРј
  objShell.run (stroka)
 
-WScript.Quit // Завершаем работу сценария
+WScript.Quit // Р—Р°РІРµСЂС€Р°РµРј СЂР°Р±РѕС‚Сѓ СЃС†РµРЅР°СЂРёСЏ
